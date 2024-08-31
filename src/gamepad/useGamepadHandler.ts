@@ -6,16 +6,15 @@ interface GamepadValue {}
 export const gamepadAtom = map<Record<string, GamepadValue>>({})
 
 export const useGamepadHandler = () => {
-  const onGamepadConnected = (event: GamepadEvent) => {}
-  const onGamepadDisconnected = (event: GamepadEvent) => {}
-
-  const [val, setVal] = useState()
+  // state only used for monitoring
+  const [axis, setAxis] = useState<[number, number]>([0, 0])
+  const [zoomLevel, setZoomLevel] = useState(100)
 
   useEffect(() => {
     // let loopId: number | undefined = undefined
     let cameraMoving: boolean = false
     let zoomSpeed = 0
-    let zoomLevel = 100
+    let innerZoomLevel = 100
 
     function onGamepadLoop() {
 
@@ -37,7 +36,8 @@ export const useGamepadHandler = () => {
             return 0
           }
           const sign = Math.sign(value)
-          let magnitude = Math.abs(value) / (1 - deadZone)
+          let magnitude = Math.abs(value)
+          magnitude = (magnitude - deadZone) / (1 - deadZone)
           magnitude = magnitude ** 2
           return sign * magnitude
         }
@@ -78,11 +78,12 @@ export const useGamepadHandler = () => {
           zoomSpeed = 0
         }
 
-        console.log(zoomSpeed)
+        innerZoomLevel = Math.min(Math.max(innerZoomLevel + zoomSpeed, minZoomLevel), maxZoomLevel)
 
-        zoomLevel = Math.min(Math.max(zoomLevel + zoomSpeed, minZoomLevel), maxZoomLevel)
+        window.setZoom(innerZoomLevel)
 
-        window.setZoom(zoomLevel)
+        setAxis([leftX, leftY])
+        setZoomLevel(innerZoomLevel)
       }
     }
 
@@ -98,5 +99,8 @@ export const useGamepadHandler = () => {
     //   loopId = requestAnimationFrame(onGamepadLoop)
   }, [])
 
-  return val
+  return {
+    axis,
+    zoomLevel
+  }
 }
