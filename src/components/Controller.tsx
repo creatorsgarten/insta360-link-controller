@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import * as proto from "../generated/insta360linkcontroller.proto";
+import {useGamepadHandler} from "../gamepad/useGamepadHandler.ts";
 
 export function Controller() {
   const logRef = useRef<HTMLTextAreaElement>(null);
@@ -129,6 +130,8 @@ export function Controller() {
     );
   }, []);
 
+  const axes = useGamepadHandler()
+
   return (
     <div>
       <textarea
@@ -142,6 +145,7 @@ export function Controller() {
           fontFamily: "monospace",
         }}
       />
+      <p>{JSON.stringify(axes)}</p>
     </div>
   );
 }
