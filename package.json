@@ -7,12 +7,17 @@
     "start": "astro dev",
     "build": "astro check && astro build",
     "preview": "astro preview",
-    "astro": "astro"
+    "astro": "astro",
+    "generate:sdk": "pbjs -t static-module -w es6 -o src/generated/insta360linkcontroller.proto.js insta360linkcontroller.proto && pbts -o src/generated/insta360linkcontroller.proto.d.ts src/generated/insta360linkcontroller.proto.js"
   },
   "dependencies": {
-    "astro": "^4.15.1",
     "@astrojs/check": "^0.9.3",
+    "astro": "^4.15.1",
+    "protobufjs": "^7.4.0",
     "typescript": "^5.5.4"
   },
-  "packageManager": "pnpm@9.9.0+sha512.60c18acd138bff695d339be6ad13f7e936eea6745660d4cc4a776d5247c540d0edee1a563695c183a66eb917ef88f2b4feb1fc25f32a7adcadc7aaf3438e99c1"
+  "packageManager": "pnpm@9.9.0+sha512.60c18acd138bff695d339be6ad13f7e936eea6745660d4cc4a776d5247c540d0edee1a563695c183a66eb917ef88f2b4feb1fc25f32a7adcadc7aaf3438e99c1",
+  "devDependencies": {
+    "protobufjs-cli": "^1.1.3"
+  }
 }

@@ -1,0 +1,232 @@
+syntax = "proto3";
+
+enum ParamType {
+  PARAM_ZOOM = 1;
+  PARAM_BRIGHTNESS = 2;
+  PARAM_CONTRAST = 3;
+  PARAM_SATURATION = 4;
+  PARAM_SHARPNESS = 5;
+  PARAM_WHITE_BALANCE_TEMP = 6;
+  PARAM_ROLL = 7;
+  PARAM_MANUAL_FOCUS = 8;
+  PARAM_AUTOFOCUS = 9;
+  PARAM_AUTO_EXPOSURE = 10;
+  PARAM_PAN_TILT_ABSOLUTE = 11;
+  PARAM_PAN_TILT_RELATIVE = 12;
+  PARAM_MIRROR = 13;
+  PARAM_VIDEO_MODE = 14;
+  PARAM_PRESET_POSITION = 15;
+  PARAM_BIAS = 16;
+  PARAM_CHANGE_DEVICE_NAME = 17;
+  PARAM_RESOLUTION = 18;
+  PARAM_HDR = 19;
+  PARAM_TRACK_SPEED = 20;
+  PARAM_COMPOSITION_STYLE = 21;
+  PARAM_IMAGEPARAM_RESET = 22;
+  PARAM_ISO_VALUE = 23;
+  PARAM_SHUTTER_VALUE = 24;
+  PARAM_EXPOSURE_COMPENSATION = 25;
+  PARAM_AUTO_WHITEBALANCE = 26;
+  PARAM_SAVE_IMAGEPARAM_PRESET = 27;
+  PARAM_COMPOSITION_STYLE_SWITCH = 28;
+}
+
+enum VideoModeType {
+  NORMAL_MODE = 0;
+  AUTO_COMPOSITION = 1;
+  TRACKING_MODE = 2;
+  WHITEBOARD_MODE = 4;
+  OVERHEAD_MODE = 5;
+  DESKVIEW_MODE = 6;
+}
+
+enum ControlSelector {
+  XU_CONTROL_UNDEFINED = 0;
+  XU_EXEC_SCRIPT_CONTROL = 1;
+  XU_VIDEO_MODE_CONTROL = 2;
+  XU_DEVICE_INFO_CONTROL = 3;
+  XU_PTZ_CMD_CONTROL = 4;
+  XU_GESTURE_STATUS_CONTROL = 5;
+  XU_GESTURE_BIND_CONTROL = 6;
+  XU_NOISE_CANCEL_CONTROL = 7;
+  XU_FIRMWARE_UPGRADE_CONTROL_OR_XU_BLEND_DRAW_CONTROL = 8;
+  XU_EXPOSURE_VALUE_CONTROL = 9;
+  XU_TAKE_PICTURE_CONTROL = 10;
+  XU_DEVICE_STATUS_CONTROL = 11;
+  XU_DEVICE_SN_CONTROL = 12;
+  XU_DEVICE_LICENSEN_CONTROL = 13;
+  XU_DEVICE_PARAM_CONTROL = 14;
+  XU_DOWNLOAD_FILE_CONTROL_OR_XU_AF_MODE_CONTROL = 15;
+  XU_UPLOAD_FILE_CONTROL_OR_XU_EXPOSURE_CURVE_CONTROL = 16;
+  XU_USB_MODE_SWITCH_CONTROL = 17;
+  XU_TRACK_SPEED_CONTROL = 18;
+  XU_LAYOUT_STYLE_CONTROL = 19;
+  XU_HEAD_LIST_CONTROL = 20;
+  XU_TRACK_TARGET_CONTROL = 21;
+  XU_PANTILT_RELATIVE_CONTROL = 22;
+  XU_MOBVOI_PUBKEY_CONTROL = 23;
+  XU_BIAS_CONTROL = 24;
+  XU_ISO_CONTROL = 25;
+  XU_PANTILT_ABSOLUTE_CONTROL = 26;
+  XU_FUNC_ENABLE_CONTROL = 27;
+  XU_VIDEO_RES_CONTROL = 28;
+  XU_EXPOSURE_TIME_ABSOLUTE_CONTROL = 29;
+  XU_AE_MODE_CONTROL = 30;
+}
+
+message UVCRequest {
+  string curDeviceSerialNum = 1;
+  ParamType paramType = 2;
+  int64 value = 3;
+}
+
+message UVCExtendRequest {
+  string curDeviceSerialNum = 1;
+  ParamType paramType = 2;
+  ControlSelector selector = 3;
+  repeated int32 data = 4;
+  int32 presetPosIndex = 5;
+}
+
+message DeviceInfoNotification {
+  string curDeviceSerialNum = 1;
+  repeated DeviceInfo devices = 2;
+
+  message DeviceInfo {
+    string deviceName = 1;
+    string serialNum = 2;
+    ZoomInfo zoom = 3;
+    VideoModeType mode = 4;
+    bool mirror = 5;
+    int32 curPresetPos = 6;
+    repeated PresetPosInfo presetInfos = 7;
+    bool verticalResolution = 8;
+    bool hdr = 9;
+    int32 trackSpeed = 10;
+    int32 compositionStyle = 11;
+    int32 brightness = 12;
+    int32 contrast = 13;
+    int32 saturation = 14;
+    int32 sharpening = 15;
+    bool imageParamReset = 16;
+    bool autoExposure = 17;
+    int32 isoValue = 18;
+    int32 shutterValue = 19;
+    int32 exposureCompensation = 20;
+    bool autoWhiteBalance = 21;
+    int32 whiteBalanceValue = 22;
+    bool saveImageParamPreset = 23;
+    bool compositionStyleEnabled = 24;
+
+    message PresetPosInfo {
+      string name = 1;
+      repeated int32 extendData = 2;
+    }
+
+    message ZoomInfo {
+      uint32 curValue = 1;
+      uint32 minValue = 2;
+      uint32 maxValue = 3;
+    }
+  }
+}
+
+message ValueChangeNotification {
+  string curDeviceSerialNum = 1;
+  ParamType paramType = 2;
+  string newValue = 3;
+}
+
+message SwitchDeviceRequest {
+  string curDeviceSerialNum = 1;
+  string newDeviceSerialNum = 2;
+}
+
+message ConnectionNotification {
+  uint32 connectNum = 1;
+  bool inControl = 2;
+}
+
+message ControlRequest {
+  string token = 1;
+}
+
+message ControlResponse {
+  bool success = 1;
+  FailureReason reason = 2;
+
+  enum FailureReason {
+    UNKNOW_FAILURE = 0;
+    ANOTHER_CONNECTION_EXISTS = 1;
+    TOKEN_INVALID = 2;
+    ACTIVE_DISCONNECT = 3;
+  }
+}
+
+message HeartbeatRequest {}
+
+message HeartbeatResponse {}
+
+message PresetUpdateRequest {
+  PresetUpdateType type = 1;
+  int32 position = 2;
+  string name = 3;
+  string curDeviceSerialNum = 4;
+
+  enum PresetUpdateType {
+    ADD = 0;
+    UPDATE = 1;
+    DELETE = 2;
+    RENAME = 3;
+  }
+}
+
+message PresetUpdateResponse {
+  bool success = 1;
+  FailureReason reason = 2;
+  DeviceInfoNotification.DeviceInfo curDeviceInfo = 3;
+
+  enum FailureReason {
+    UNKNOW_FAILURE = 0;
+    LINK_DISCONNECTED = 1;
+  }
+}
+
+message ToastNotification {
+  string curDeviceSerialNum = 1;
+  string content = 2;
+}
+
+message Request {
+  bool hasUvcRequest = 1;
+  bool hasUvcExtendRequest = 2;
+  bool hasSwitchDeviceRequest = 3;
+  bool hasControlRequest = 4;
+  bool hasHeartbeatRequest = 5;
+  bool hasPresetUpdateRequest = 6;
+  bool hasValueChangeNotify = 7;
+  UVCRequest uvcRequest = 10;
+  UVCExtendRequest uvcExtendRequest = 11;
+  SwitchDeviceRequest switchDeviceRequest = 12;
+  ControlRequest controlRequest = 13;
+  HeartbeatRequest heartbeatRequest = 14;
+  PresetUpdateRequest presetUpdateRequest = 15;
+  ValueChangeNotification valueChangeNotify = 16;
+}
+
+message Response {
+  bool hasDeviceInfoNotify = 1;
+  bool hasValueChangeNotify = 2;
+  bool hasControlResponse = 3;
+  bool hasConnectionNotify = 4;
+  bool hasHeartbeatResponse = 5;
+  bool hasPresetUpdateResponse = 6;
+  bool hasToastNotify = 7;
+  DeviceInfoNotification deviceInfoNotify = 10;
+  ValueChangeNotification valueChangeNotify = 11;
+  ControlResponse controlResponse = 12;
+  ConnectionNotification connectionNotify = 13;
+  HeartbeatResponse heartbeatResponse = 14;
+  PresetUpdateResponse presetUpdateResponse = 15;
+  ToastNotification toastNotify = 16;
+}
