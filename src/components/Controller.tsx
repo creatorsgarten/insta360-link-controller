@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
+import { useGamepadHandler } from "../gamepad/useGamepadHandler.ts";
 import * as proto from "../generated/insta360linkcontroller.proto";
-import {useGamepadHandler} from "../gamepad/useGamepadHandler.ts";
+import { FaceDetectionController } from "./FaceDetector.tsx";
 
 export function Controller() {
   const logRef = useRef<HTMLTextAreaElement>(null);
@@ -128,9 +129,16 @@ export function Controller() {
     appendLog(
       "Use `setPanTiltSpeed(x, y)` and `setZoom(z)` to control the camera"
     );
+
+    setInterval(() => {
+      sendMessage({
+        hasHeartbeatRequest: true,
+        heartbeatRequest: {},
+      });
+    }, 1000);
   }, []);
 
-  const {axis, zoomLevel} = useGamepadHandler()
+  const { axis, zoomLevel } = useGamepadHandler();
 
   return (
     <div>
@@ -145,7 +153,7 @@ export function Controller() {
           fontFamily: "monospace",
         }}
       />
-      <div className={"flex p-4"}>
+      <div className={"flex p-4 gap-2"}>
         <section className={"bg-gray-100 space-y-2 px-4 py-2"}>
           <h1 className={"font-extrabold text-center"}>Controller</h1>
           <div className="bg-gray-200 w-48 h-48 rounded-xl relative overflow-hidden rounded-full">
@@ -159,16 +167,22 @@ export function Controller() {
             <div className="w-48 h-0.5 bg-gray-300 absolute top-3/4"></div>
 
             {/*Dot*/}
-            <div className="w-4 h-4 bg-red-500 rounded-full absolute z-20" style={{
-              top: (6 - 0.4 + (axis[1] * 6)) * 16,
-              left: (6 - 0.4 + (axis[0] * 6)) * 16,
-            }}></div>
+            <div
+              className="w-4 h-4 bg-red-500 rounded-full absolute z-20"
+              style={{
+                top: (6 - 0.4 + axis[1] * 6) * 16,
+                left: (6 - 0.4 + axis[0] * 6) * 16,
+              }}
+            ></div>
           </div>
           <div className={"w-48"}>
             <div className={"h-4 bg-gray-200 rounded-md overflow-hidden"}>
-              <div className={"h-4 bg-blue-500"} style={{
-                width: `${((zoomLevel - 100) * 100 / 300).toFixed(2)}%`
-              }}></div>
+              <div
+                className={"h-4 bg-blue-500"}
+                style={{
+                  width: `${(((zoomLevel - 100) * 100) / 300).toFixed(2)}%`,
+                }}
+              ></div>
             </div>
             <div className={"flex justify-between px-2 font-bold text-sm"}>
               <span>S</span>
@@ -176,6 +190,7 @@ export function Controller() {
             </div>
           </div>
         </section>
+        <FaceDetectionController />
       </div>
     </div>
   );
