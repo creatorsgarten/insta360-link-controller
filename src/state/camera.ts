@@ -15,7 +15,7 @@ export const $panTiltSpeed = computed(
       x += dx;
       y += dy;
     }
-    return { x, y };
+    return { x: Math.round(x), y: Math.round(y) };
   }
 );
 
@@ -23,7 +23,10 @@ export const $throttledPanTiltSpeed = atom($panTiltSpeed.get());
 
 onMount($throttledPanTiltSpeed, () => {
   const interval = setInterval(() => {
-    $throttledPanTiltSpeed.set($panTiltSpeed.get());
+    const current = $throttledPanTiltSpeed.get();
+    const target = $panTiltSpeed.get();
+    if (JSON.stringify(target) === JSON.stringify(current)) return;
+    $throttledPanTiltSpeed.set(target);
   }, 50);
   return () => clearInterval(interval);
 });
