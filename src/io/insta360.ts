@@ -11,7 +11,84 @@ export const $connectionStatus = atom<"disconnected" | "connected">(
 let ws: WebSocket;
 let serialNumber = "";
 
-export function initializeWebSocket(port: string, token: string) {
+async function requestPortAndToken(): Promise<{
+  port: string;
+  token: string;
+}> {
+  return new Promise<{ port: string; token: string }>((resolve) => {
+    addLog(
+      "Please take a screenshot of the QR code from the Insta360 app and paste it in this webpage."
+    );
+    const zxing = import("@zxing/library");
+
+    const pasteHandler = async (event: ClipboardEvent) => {
+      const items = event.clipboardData?.items;
+      addLog(`Paste event received. Number of items: ${items?.length}`);
+      if (!items) return;
+
+      for (let i = 0; i < items.length; i++) {
+        addLog(`items[${i}].type = ${items[i].type}`);
+        if (items[i].type.indexOf("image") !== -1) {
+          const blob = items[i].getAsFile();
+          if (!blob) continue;
+          addLog(`Received image with size: ${blob.size}`);
+          try {
+            const barcodeDetector = new (window as any).BarcodeDetector({
+              formats: ["qr_code"],
+            });
+            const imageBitmap = await createImageBitmap(blob);
+            try {
+              const barcodes = await barcodeDetector.detect(imageBitmap);
+              for (const [i, barcode] of barcodes.entries()) {
+                addLog(`barcodes[${i}] detected.`);
+                try {
+                  const url = new URL(barcode.rawValue);
+                  const port = url.searchParams.get("port");
+                  const token = url.searchParams.get("token");
+                  if (!port || !token) {
+                    throw new Error("Missing port or token in URL");
+                  }
+
+                  const searchParams = new URLSearchParams(
+                    window.location.search
+                  );
+                  searchParams.set("port", port);
+                  searchParams.set("token", token);
+                  window.history.replaceState({}, "", `?${searchParams}`);
+
+                  resolve({ port, token });
+                } catch (error) {
+                  console.error("Error processing barcode:", error);
+                  addLog(`Unable to process barcodes[${i}]: ${error}`);
+                }
+              }
+            } catch (e) {
+              console.error("Barcode detection failed:", e);
+            }
+          } catch (error) {
+            console.error("Error processing image:", error);
+            addLog("Error processing image. Please try again.");
+          }
+        }
+      }
+    };
+
+    document.addEventListener("paste", pasteHandler);
+  });
+}
+
+export async function initializeWebSocket() {
+  const searchParams = new URLSearchParams(window.location.search);
+  let port = searchParams.get("port");
+  let token = searchParams.get("token");
+
+  if (!port || !token) {
+    console.error("Missing port or token");
+    addLog("Missing port or token");
+
+    ({ port, token } = await requestPortAndToken());
+  }
+
   if (ws) return;
   ws = new WebSocket(`ws://localhost:${port}/?token=${token}`);
   ws.binaryType = "arraybuffer";

@@ -8,10 +8,6 @@ export function Controller() {
   const logRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
-    const searchParams = new URLSearchParams(window.location.search);
-    const portParam = searchParams.get("port");
-    const tokenParam = searchParams.get("token");
-
     const appendLog = (message: string) => {
       if (logRef.current) {
         logRef.current.value += message + "\n";
@@ -19,14 +15,8 @@ export function Controller() {
       }
     };
 
-    if (!portParam || !tokenParam) {
-      console.error("Missing port or token");
-      appendLog("Missing port or token");
-      return;
-    }
-
     addLogHandler(appendLog);
-    initializeWebSocket(portParam, tokenParam);
+    initializeWebSocket();
   }, []);
 
   return (
