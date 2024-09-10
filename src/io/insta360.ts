@@ -19,8 +19,6 @@ async function requestPortAndToken(): Promise<{
     addLog(
       "Please take a screenshot of the QR code from the Insta360 app and paste it in this webpage."
     );
-    const zxing = import("@zxing/library");
-
     const pasteHandler = async (event: ClipboardEvent) => {
       const items = event.clipboardData?.items;
       addLog(`Paste event received. Number of items: ${items?.length}`);
