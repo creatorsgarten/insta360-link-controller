@@ -1,12 +1,52 @@
+import { useEffect, useRef } from "react";
 import { useGamepadHandler } from "../gamepad/useGamepadHandler";
 
 export function GamepadController() {
-  const { axis, zoomLevel } = useGamepadHandler();
+  const { axis, zoomLevel, updateAxisFromPointer } = useGamepadHandler();
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    let isPointerDown = false;
+    const handlePointerDown = (e: PointerEvent) => {
+      isPointerDown = true;
+      handlePointerMove(e);
+    };
+
+    const handlePointerMove = (e: PointerEvent) => {
+      if (!isPointerDown) return;
+      const rect = container.getBoundingClientRect();
+      const x = (e.clientX - rect.left) / rect.width;
+      const y = (e.clientY - rect.top) / rect.height;
+      updateAxisFromPointer(x * 2 - 1, y * 2 - 1);
+    };
+
+    const handlePointerUp = () => {
+      isPointerDown = false;
+      updateAxisFromPointer(0, 0);
+    };
+    container.addEventListener("pointerdown", handlePointerDown);
+    container.addEventListener("pointermove", handlePointerMove);
+    container.addEventListener("pointerup", handlePointerUp);
+    container.addEventListener("pointerleave", handlePointerUp);
+
+    return () => {
+      container.removeEventListener("pointerdown", handlePointerDown);
+      container.removeEventListener("pointermove", handlePointerMove);
+      container.removeEventListener("pointerup", handlePointerUp);
+      container.removeEventListener("pointerleave", handlePointerUp);
+    };
+  }, [updateAxisFromPointer]);
 
   return (
     <section className={"space-y-2 px-4 py-2"}>
       <h2 className={"font-extrabold text-center"}>Controller</h2>
-      <div className="bg-green-950 w-48 h-48 rounded-xl relative overflow-hidden rounded-full">
+      <div
+        ref={containerRef}
+        className="bg-green-950 w-48 h-48 rounded-xl relative overflow-hidden rounded-full"
+      >
         {/*Y-axis*/}
         <div className="h-48 w-0.5 bg-green-300/10 absolute left-1/4"></div>
         <div className="h-48 w-0.5 bg-green-300/30 absolute left-1/2 z-10"></div>

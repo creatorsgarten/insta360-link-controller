@@ -1,5 +1,5 @@
 import { map } from "nanostores";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { $zoomLevel, contributePanTiltSpeed } from "../state/camera";
 
 interface GamepadValue {}
@@ -10,6 +10,26 @@ export const useGamepadHandler = () => {
   // state only used for monitoring
   const [axis, setAxis] = useState<[number, number]>([0, 0]);
   const [zoomLevel, setZoomLevel] = useState(100);
+  const [isPointerControlActive, setIsPointerControlActive] = useState(false);
+
+  const calculateAndContributeSpeed = useCallback((x: number, y: number) => {
+    const maxSpeedX = 30;
+    const maxSpeedY = 20;
+
+    const speedX = Math.round(x * maxSpeedX);
+    const speedY = Math.round(y * maxSpeedY);
+
+    contributePanTiltSpeed("gamepad", speedX, speedY);
+  }, []);
+
+  const updateAxisFromPointer = useCallback(
+    (x: number, y: number) => {
+      setAxis([x, y]);
+      setIsPointerControlActive(x !== 0 || y !== 0);
+      calculateAndContributeSpeed(x, y);
+    },
+    [calculateAndContributeSpeed]
+  );
 
   useEffect(() => {
     // let loopId: number | undefined = undefined
@@ -18,6 +38,8 @@ export const useGamepadHandler = () => {
     let innerZoomLevel = 100;
 
     function onGamepadLoop() {
+      if (isPointerControlActive) return;
+
       const gamepads = navigator.getGamepads();
       const gamepad = gamepads[0];
 
@@ -46,16 +68,8 @@ export const useGamepadHandler = () => {
 
         // if analog stick left is moved outside of deadzone
         if (Math.abs(leftX) > 0 || Math.abs(leftY) > 0) {
-          // const maxSpeedX = 100
-          const maxSpeedX = 30;
-          const maxSpeedY = 20;
-
-          // send camera movement speed based on position
-          const speedX = Math.round(leftX * maxSpeedX);
-          const speedY = Math.round(leftY * maxSpeedY);
-
           cameraMoving = true;
-          contributePanTiltSpeed("gamepad", speedX, speedY);
+          calculateAndContributeSpeed(leftX, leftY);
         } else {
           // if analog stick left is in deadzone, stop camera movement
           if (cameraMoving) {
@@ -105,5 +119,6 @@ export const useGamepadHandler = () => {
   return {
     axis,
     zoomLevel,
+    updateAxisFromPointer,
   };
 };
