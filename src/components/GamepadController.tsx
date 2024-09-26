@@ -1,9 +1,11 @@
 import { useEffect, useRef } from "react";
 import { useGamepadHandler } from "../gamepad/useGamepadHandler";
+import { $zoomLevel } from "../state/camera";
 
 export function GamepadController() {
   const { axis, zoomLevel, updateAxisFromPointer } = useGamepadHandler();
   const containerRef = useRef<HTMLDivElement>(null);
+  const zoomerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -40,6 +42,42 @@ export function GamepadController() {
     };
   }, [updateAxisFromPointer]);
 
+  useEffect(() => {
+    const zoomer = zoomerRef.current;
+    if (!zoomer) return;
+
+    let isZoomerDown = false;
+
+    const handleZoomerDown = (e: PointerEvent) => {
+      isZoomerDown = true;
+      handleZoomerMove(e);
+    };
+
+    const handleZoomerMove = (e: PointerEvent) => {
+      if (!isZoomerDown) return;
+      const rect = zoomer.getBoundingClientRect();
+      const x = (e.clientX - rect.left) / rect.width;
+      const newZoomLevel = 100 + x * 300;
+      $zoomLevel.set(Math.max(100, Math.min(400, newZoomLevel)));
+    };
+
+    const handleZoomerUp = () => {
+      isZoomerDown = false;
+    };
+
+    zoomer.addEventListener("pointerdown", handleZoomerDown);
+    zoomer.addEventListener("pointermove", handleZoomerMove);
+    zoomer.addEventListener("pointerup", handleZoomerUp);
+    zoomer.addEventListener("pointerleave", handleZoomerUp);
+
+    return () => {
+      zoomer.removeEventListener("pointerdown", handleZoomerDown);
+      zoomer.removeEventListener("pointermove", handleZoomerMove);
+      zoomer.removeEventListener("pointerup", handleZoomerUp);
+      zoomer.removeEventListener("pointerleave", handleZoomerUp);
+    };
+  }, []);
+
   return (
     <section className={"space-y-2 px-4 py-2"}>
       <h2 className={"font-extrabold text-center"}>Controller</h2>
@@ -66,7 +104,10 @@ export function GamepadController() {
         ></div>
       </div>
       <div className={"w-48"}>
-        <div className={"h-4 bg-gray-200 rounded-md overflow-hidden"}>
+        <div
+          className={"h-4 bg-gray-200 rounded-md overflow-hidden"}
+          ref={zoomerRef}
+        >
           <div
             className={"h-4 bg-blue-500"}
             style={{

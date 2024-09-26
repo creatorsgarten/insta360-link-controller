@@ -1,3 +1,4 @@
+import { useStore } from "@nanostores/react";
 import { map } from "nanostores";
 import { useCallback, useEffect, useState } from "react";
 import { $zoomLevel, contributePanTiltSpeed } from "../state/camera";
@@ -6,10 +7,21 @@ interface GamepadValue {}
 
 export const gamepadAtom = map<Record<string, GamepadValue>>({});
 
+const preprocess = (value: number, deadZone = 0.1) => {
+  if (Math.abs(value) < deadZone) {
+    return 0;
+  }
+  const sign = Math.sign(value);
+  let magnitude = Math.abs(value);
+  magnitude = (magnitude - deadZone) / (1 - deadZone);
+  magnitude = magnitude ** 2;
+  return sign * magnitude;
+};
+
 export const useGamepadHandler = () => {
+  const zoomLevel = useStore($zoomLevel);
   // state only used for monitoring
   const [axis, setAxis] = useState<[number, number]>([0, 0]);
-  const [zoomLevel, setZoomLevel] = useState(100);
   const [isPointerControlActive, setIsPointerControlActive] = useState(false);
 
   const calculateAndContributeSpeed = useCallback((x: number, y: number) => {
@@ -26,7 +38,8 @@ export const useGamepadHandler = () => {
     (x: number, y: number) => {
       setAxis([x, y]);
       setIsPointerControlActive(x !== 0 || y !== 0);
-      calculateAndContributeSpeed(x, y);
+      const dz = 0;
+      calculateAndContributeSpeed(preprocess(x, dz), preprocess(y, dz));
     },
     [calculateAndContributeSpeed]
   );
@@ -52,17 +65,6 @@ export const useGamepadHandler = () => {
         // stick left x = -1, stick right x = 1, stick up y = -1, stick down y = 1
         let [leftX, leftY, rightX, rightY] = gamepad.axes;
 
-        const preprocess = (value: number) => {
-          const deadZone = 0.1;
-          if (Math.abs(value) < deadZone) {
-            return 0;
-          }
-          const sign = Math.sign(value);
-          let magnitude = Math.abs(value);
-          magnitude = (magnitude - deadZone) / (1 - deadZone);
-          magnitude = magnitude ** 2;
-          return sign * magnitude;
-        };
         leftX = preprocess(leftX);
         leftY = preprocess(leftY);
 
@@ -100,7 +102,6 @@ export const useGamepadHandler = () => {
         $zoomLevel.set(innerZoomLevel);
 
         setAxis([leftX, leftY]);
-        setZoomLevel(innerZoomLevel);
       }
     }
 

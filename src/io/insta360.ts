@@ -137,6 +137,11 @@ function handleIncomingMessage(message: proto.Response) {
 
   if (message.hasDeviceInfoNotify && message.deviceInfoNotify) {
     serialNumber = message.deviceInfoNotify.curDeviceSerialNum;
+    const devices: proto.DeviceInfoNotification.IDeviceInfo[] =
+      message.deviceInfoNotify.devices;
+    const device = devices.find((device) => device.serialNum === serialNumber);
+    device?.zoom?.curValue && $zoomLevel.set(device.zoom.curValue);
+    console.log("zoomLevel", device?.zoom?.curValue);
   }
 }
 
