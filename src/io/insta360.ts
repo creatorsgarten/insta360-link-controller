@@ -1,5 +1,5 @@
 import { atom } from "nanostores";
-import * as proto from "../generated/insta360linkcontroller.proto";
+import { ProtocolAbstraction, type UnifiedResponse } from "./protocol-abstraction";
 import { $throttledPanTiltSpeed, $zoomLevel } from "../state/camera";
 import { addLog } from "../state/logging";
 
@@ -94,10 +94,7 @@ export async function initializeWebSocket() {
   ws.onopen = () => {
     $connectionStatus.set("connected");
     addLog("Connected");
-    sendMessage({
-      hasControlRequest: true,
-      controlRequest: { token },
-    });
+    sendMessage(ProtocolAbstraction.createControlRequest(token));
   };
 
   ws.onclose = () => {
@@ -111,15 +108,15 @@ export async function initializeWebSocket() {
   };
 
   ws.onmessage = (event) => {
-    const message = proto.Response.decode(new Uint8Array(event.data));
+    const message = ProtocolAbstraction.decodeResponse(new Uint8Array(event.data));
     handleIncomingMessage(message);
   };
 
   startHeartbeat();
 }
 
-function handleIncomingMessage(message: proto.Response) {
-  const categories: [keyof typeof message, keyof typeof message][] = [
+function handleIncomingMessage(message: UnifiedResponse) {
+  const categories: [string, string][] = [
     ["hasConnectionNotify", "connectionNotify"],
     ["hasControlResponse", "controlResponse"],
     ["hasDeviceInfoNotify", "deviceInfoNotify"],
@@ -130,23 +127,25 @@ function handleIncomingMessage(message: proto.Response) {
   ];
 
   for (const [hasKey, valueKey] of categories) {
-    if (message[hasKey]) {
-      addLog(`<< ${valueKey} ${JSON.stringify(message[valueKey])}`);
+    if ((message as any)[hasKey]) {
+      addLog(`<< ${valueKey} ${JSON.stringify((message as any)[valueKey])}`);
     }
   }
 
-  if (message.hasDeviceInfoNotify && message.deviceInfoNotify) {
-    serialNumber = message.deviceInfoNotify.curDeviceSerialNum;
-    const devices: proto.DeviceInfoNotification.IDeviceInfo[] =
-      message.deviceInfoNotify.devices;
-    const device = devices.find((device) => device.serialNum === serialNumber);
-    device?.zoom?.curValue && $zoomLevel.set(device.zoom.curValue);
-    console.log("zoomLevel", device?.zoom?.curValue);
+  if ((message as any).hasDeviceInfoNotify && (message as any).deviceInfoNotify) {
+    serialNumber = (message as any).deviceInfoNotify.curDeviceSerialNum;
+    // Handle different structure between v1 and v2 protocols
+    const devices = (message as any).deviceInfoNotify.devices || (message as any).deviceInfoNotify.basicInfo;
+    const device = devices?.find((device: any) => device.serialNum === serialNumber);
+    if (device?.zoom?.curValue) {
+      $zoomLevel.set(device.zoom.curValue);
+      console.log("zoomLevel", device.zoom.curValue);
+    }
   }
 }
 
-function sendMessage(message: Partial<proto.Request>) {
-  const categories: [keyof typeof message, keyof typeof message][] = [
+function sendMessage(message: any) {
+  const categories: [string, string][] = [
     ["hasControlRequest", "controlRequest"],
     ["hasHeartbeatRequest", "heartbeatRequest"],
     ["hasPresetUpdateRequest", "presetUpdateRequest"],
@@ -162,43 +161,40 @@ function sendMessage(message: Partial<proto.Request>) {
     }
   }
 
-  ws.send(proto.Request.encode(proto.Request.create(message)).finish());
+  const request = ProtocolAbstraction.createRequest(message);
+  ws.send(ProtocolAbstraction.encodeRequest(request));
 }
 
 $throttledPanTiltSpeed.listen((value) => {
-  sendMessage({
-    hasUvcExtendRequest: true,
-    uvcExtendRequest: {
-      data: [
-        value.x > 0 ? 1 : value.x < 0 ? 255 : 0,
-        Math.ceil(Math.abs(value.x)),
-        value.y > 0 ? 1 : value.y < 0 ? 255 : 0,
-        Math.ceil(Math.abs(value.y)),
-      ],
-      curDeviceSerialNum: serialNumber,
-      paramType: proto.ParamType.PARAM_PAN_TILT_RELATIVE,
-      selector: proto.ControlSelector.XU_PANTILT_RELATIVE_CONTROL,
-      presetPosIndex: -1,
-    },
-  });
+  const paramType = ProtocolAbstraction.getParamType();
+  const controlSelector = ProtocolAbstraction.getControlSelector();
+  
+  sendMessage(ProtocolAbstraction.createUvcExtendRequest({
+    data: [
+      value.x > 0 ? 1 : value.x < 0 ? 255 : 0,
+      Math.ceil(Math.abs(value.x)),
+      value.y > 0 ? 1 : value.y < 0 ? 255 : 0,
+      Math.ceil(Math.abs(value.y)),
+    ],
+    curDeviceSerialNum: serialNumber,
+    paramType: paramType.PARAM_PAN_TILT_RELATIVE,
+    selector: controlSelector.XU_PANTILT_RELATIVE_CONTROL,
+    presetPosIndex: -1,
+  }));
 });
 
 $zoomLevel.listen((value) => {
-  sendMessage({
-    hasUvcRequest: true,
-    uvcRequest: {
-      curDeviceSerialNum: serialNumber,
-      paramType: proto.ParamType.PARAM_ZOOM,
-      value,
-    },
-  });
+  const paramType = ProtocolAbstraction.getParamType();
+  
+  sendMessage(ProtocolAbstraction.createUvcRequest({
+    curDeviceSerialNum: serialNumber,
+    paramType: paramType.PARAM_ZOOM,
+    value,
+  }));
 });
 
 function startHeartbeat() {
   setInterval(() => {
-    sendMessage({
-      hasHeartbeatRequest: true,
-      heartbeatRequest: {},
-    });
+    sendMessage(ProtocolAbstraction.createHeartbeatRequest());
   }, 1000);
 }

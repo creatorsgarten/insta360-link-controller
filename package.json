@@ -8,7 +8,8 @@
     "build": "astro check && astro build",
     "preview": "astro preview",
     "astro": "astro",
-    "generate:sdk": "pbjs -t static-module -w es6 -o src/generated/insta360linkcontroller.proto.js insta360linkcontroller.proto && pbts -o src/generated/insta360linkcontroller.proto.d.ts src/generated/insta360linkcontroller.proto.js"
+    "generate:sdk:v1": "pbjs -t static-module -w es6 -o src/generated/insta360linkcontroller.proto.js insta360linkcontroller.proto && pbts -o src/generated/insta360linkcontroller.proto.d.ts src/generated/insta360linkcontroller.proto.js",
+    "generate:sdk:v2": "pbjs -t static-module -w es6 -o src/generated/insta360linkcontroller_v2.proto.js insta360linkcontroller_v2.proto && pbts -o src/generated/insta360linkcontroller_v2.proto.d.ts src/generated/insta360linkcontroller_v2.proto.js"
   },
   "dependencies": {
     "@astrojs/check": "^0.9.3",

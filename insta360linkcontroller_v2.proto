@@ -1,0 +1,363 @@
+syntax = "proto3";
+
+enum ParamType {
+  // Values 1-52
+  PARAM_MIRROR_VER = 1;
+  PARAM_MIRROR_HOR = 2;
+  PARAM_RESET_PTZ = 3;
+  PARAM_ZOOM = 4;
+  PARAM_VIDEO_MODE = 5;
+  PARAM_PTZ_MID = 6;
+  PARAM_PTZ_OP = 7;
+  PATAM_PTZ_HOST = 8;  // Note the typo in the original
+  PARAM_TRACK_SPEED = 9;
+  PARAM_COMPOSITION_STYLE = 10;
+  PARAM_COMPOSITION_STYLE_SWITCH = 11;
+  PARAM_AUTO_TRACK = 12;
+  PARAM_SINGLE_TAPTRACKING = 13;
+  PARAM_ISO_VALUE = 14;
+  PARAM_SHUTTER_VALUE = 15;
+  PARAM_EXPOSURE_COMPENSATION = 16;
+  PARAM_AUTO_EXPOSURE = 17;
+  PARAM_AUTO_FOCUS = 18;
+  PARAM_MANUAL_FOCUS_VALUE = 19;
+  PARAM_AUTO_WHITEBALANCE = 20;
+  PARAM_WHITE_BALANCE_TEMP = 21;
+  PARAM_BRIGHTNESS = 22;
+  PARAM_CONTRAST = 23;
+  PARAM_SATURATION = 24;
+  PARAM_SHARPNESS = 25;
+  PARAM_HDR = 26;
+  PARAM_AUTI_FLICK = 27;  // Note the typo: should be ANTI_FLICK
+  PARAM_BLUR_SWITCH = 28;
+  PARAM_REPLACE_SWITCH = 29;
+  PARAM_BLUR_RADIUS = 30;
+  PARAM_BLUR_MODE = 31;
+  PARAM_REPLACE_INDEX = 32;
+  PARAM_AUDIO_CAPTURE_MODE = 33;
+  PARAM_SMART_ADJUST = 34;
+  PARAM_PRIVACY_MODE = 35;
+  PARAM_ROLL_ADJUST = 36;
+  PARAM_LOWER_RES = 37;
+  PARAM_VERTICAL_SCREEN = 38;
+  PARAM_GESTURE_TOTAL_SWITCH = 39;
+  PARAM_GESTURE_PALM_SWITCH = 40;
+  PARAM_GESTURE_V_SWITCH = 41;
+  PARAM_GESTURE_L_SWITCH = 42;
+  PARAM_GESTURE_ROCK_SWITCH = 43;
+  PARAM_GESTURE_OK_SWITCH = 44;
+  PARAM_HOST_PTZ_INFO = 45;
+  PARAM_IMAGE_FILTER = 46;
+  PARAM_IMAGE_TEMPLATE = 47;
+  PARAM_CLOSE_BLUR_REPLACE = 48;
+  PARAM_VIDEO_PRIVACY_MODE = 49;
+  PARAM_FINE_TUNING = 50;
+  PARAM_TRACK_FIRBOIDDEN_AREA = 51;  // Note the typo: should be FORBIDDEN
+  PARAM_VER_SCREEN_LOCK = 52;
+  
+  // Values 100-108
+  PARAM_ROLL = 100;
+  PARAM_PAN_TILT_ABSOLUTE = 101;
+  PARAM_PAN_TILT_RELATIVE = 102;
+  PARAM_PRESET_POSITION = 103;
+  PARAM_BIAS = 104;
+  PARAM_CHANGE_DEVICE_NAME = 105;
+  PARAM_RESOLUTION = 106;
+  PARAM_IMAGEPARAM_RESET = 107;
+  PARAM_SAVE_IMAGEPARAM_PRESET = 108;
+}
+
+enum VideoModeType {
+  NORMAL_MODE = 0;
+  AUTO_COMPOSITION = 1;
+  TRACKING_MODE = 2;
+  // Note: 3 is skipped
+  WHITEBOARD_MODE = 4;
+  OVERHEAD_MODE = 5;
+  DESKVIEW_MODE = 6;
+  AUTOFRAMEING_MODE = 7;  // Note the typo: should be AUTOFRAMING
+  SMARTWHITEBOARD_MODE = 8;
+  REGIONALTRACK_MODE = 9;
+  SMARTWHITEBOARD_QUERY = 10;
+  SMARTWHITEBOARD_CONFIG = 11;
+}
+
+enum MettingCameraType {
+  Link = 0;
+  PUC2 = 1;
+  PUC2_Flow = 2;
+  PUC3 = 3;
+  PUC3_Flow = 4;
+}
+
+enum ControlSelector {
+  XU_CONTROL_UNDEFINED = 0;
+  XU_EXEC_SCRIPT_CONTROL = 1;
+  XU_VIDEO_MODE_CONTROL = 2;
+  XU_DEVICE_INFO_CONTROL = 3;
+  XU_PTZ_CMD_CONTROL = 4;
+  XU_GESTURE_STATUS_CONTROL = 5;
+  XU_GESTURE_BIND_CONTROL = 6;
+  XU_NOISE_CANCEL_CONTROL = 7;
+  XU_FIRMWARE_UPGRADE_CONTROL = 8;
+  XU_EXPOSURE_VALUE_CONTROL = 9;
+  XU_TAKE_PICTURE_CONTROL = 10;
+  XU_DEVICE_STATUS_CONTROL = 11;
+  XU_DEVICE_SN_CONTROL = 12;
+  XU_DEVICE_LICENSEN_CONTROL = 13;
+  XU_DEVICE_PARAM_CONTROL = 14;
+  XU_AF_MODE_CONTROL = 15;
+  XU_EXPOSURE_CURVE_CONTROL = 16;
+  XU_USB_MODE_SWITCH_CONTROL = 17;
+  XU_TRACK_SPEED_CONTROL = 18;
+  XU_LAYOUT_STYLE_CONTROL = 19;
+  XU_HEAD_LIST_CONTROL = 20;
+  XU_TRACK_TARGET_CONTROL = 21;
+  XU_PANTILT_RELATIVE_CONTROL = 22;
+  XU_MOBVOI_PUBKEY_CONTROL = 23;
+  XU_BIAS_CONTROL = 24;
+  XU_ISO_CONTROL = 25;
+  XU_PANTILT_ABSOLUTE_CONTROL = 26;
+  XU_FUNC_ENABLE_CONTROL = 27;
+  XU_VIDEO_RES_CONTROL = 28;
+  XU_EXPOSURE_TIME_ABSOLUTE_CONTROL = 29;
+  XU_AE_MODE_CONTROL = 30;
+}
+
+message UVCRequest {
+  string curDeviceSerialNum = 1;
+  ParamType paramType = 2;
+  int64 value = 3;
+}
+
+message UVCExtendRequest {
+  string curDeviceSerialNum = 1;
+  ParamType paramType = 2;
+  ControlSelector selector = 3;
+  repeated int32 data = 4;
+  int32 presetPosIndex = 5;
+}
+
+message DeviceInfoNotification {
+  repeated DeviceBasicInfo basicInfo = 1;
+  string curDeviceSerialNum = 2;
+}
+
+message DeviceBasicInfo {
+  string deviceName = 1;
+  string serialNum = 2;
+  MettingCameraType cameraType = 3;
+  VideoModeType VideoModeType = 4;
+  ZoomInfo zoom = 5;
+  repeated PresetPosInfo presetInfos = 6;
+  int32 curPresetPos = 7;
+  bool verticallyMirror = 8;
+  bool horizontallyMirror = 9;
+  DeviceSettingInfo settingInfos = 10;
+  float hostPTZx = 11;
+  float hostPTZy = 12;
+}
+
+message ZoomInfo {
+  uint32 curValue = 1;
+  uint32 minValue = 2;
+  uint32 maxValue = 3;
+}
+
+message PresetPosInfo {
+  string name = 1;
+  int32 index = 2;
+}
+
+message DeviceSettingInfo {
+  int32 compositionStyle = 1;
+  int32 trackSpeed = 2;
+  bool enableAutoTrack = 4;
+  bool enableSingleTapTracking = 5;
+  bool compositionStyleEnabled = 6;
+  bool hdr = 9;
+  int32 brightness = 12;
+  int32 contrast = 13;
+  int32 satutation = 14;
+  int32 sharpening = 15;
+  bool imageParamReset = 16;
+  bool autoExposure = 17;
+  int32 isoValue = 18;
+  int32 shutterValue = 19;
+  int32 exposureCompensation = 20;
+  bool autoWhiteBalance = 21;
+  int32 whiteBalanceValue = 22;
+  repeated ImageParamPreset imageParamPresetInfos = 23;
+  repeated ImageFilter imageFilterInfos = 24;
+  int32 curImageParam = 25;
+  int32 curImageFilter = 26;
+  bool supportVirtualCamera = 27;
+  bool enableBackGroudBlur = 28;
+  bool enableBackGroudReplace = 29;
+  repeated int32 supportBlurModeList = 31;
+  int32 replaceIndex = 32;
+  int32 antiFlicker = 34;
+  int32 audioCaptureMode = 35;
+  int32 curBlurMode = 36;
+  bool enableSmartAdjust = 37;
+  bool enablePrivacyMode = 38;
+  bool enableRollAdjust = 39;
+  bool enableLowerRes = 40;
+  int32 blurRadius = 41;
+  bool gestureEnabled = 42;
+  bool gesturePlamEnabled = 43;
+  bool gestureVEnabled = 44;
+  bool gestureLEnabled = 45;
+  bool gestureRockEnabled = 46;
+  bool gestureOkEnabled = 47;
+  bool enableAutoFocus = 48;
+  int32 maualFocus = 49;
+  bool enableVerticalScreen = 50;
+  bool videoPrivacyMode = 51;
+  string resolution = 52;
+  float funeTuningValue = 53;
+  bool verScreenLock = 54;
+  bool enableTrackForiddenArea = 55;
+}
+
+message ImageParamPreset {
+  string name = 1;
+  int32 index = 2;
+}
+
+message ImageFilter {
+  string name = 1;
+  int32 index = 2;
+}
+
+message PTZParam {
+  float panSpeed = 1;
+  float tiltSpeed = 2;
+  float panValue = 3;
+  float tiltVaule = 4;  // Note the typo: should be tiltValue
+  double hostPTZx = 5;
+  double hostPTZy = 6;
+}
+
+message ValueChangeNotification {
+  string curDeviceSerialNum = 1;
+  ParamType paramType = 2;
+  string newValue = 3;
+  PTZParam ptzParam = 4;
+}
+
+message SwitchDeviceRequest {
+  string curDeviceSerialNum = 1;
+  string newDeviceSerialNum = 2;
+}
+
+message ConnectionNotification {
+  uint32 connectNum = 1;
+  bool inControl = 2;
+}
+
+message ControlRequest {
+  string token = 1;
+}
+
+message ControlResponse {
+  bool success = 1;
+  FailureReason reason = 2;
+  
+  enum FailureReason {
+    UNKNOW_FAILURE = 0;  // Note the typo: should be UNKNOWN
+    ANOTHER_CONNECTION_EXISTS = 1;
+    TOKEN_INVALID = 2;
+    ACTIVE_DISCONNECT = 3;
+  }
+}
+
+message HeartbeatRequest {}
+
+message HeartbeatResponse {}
+
+message PresetUpdateRequest {
+  PresetUpdateType type = 1;
+  int32 position = 2;
+  string name = 3;
+  string curDeviceSerialNum = 4;
+  
+  enum PresetUpdateType {
+    ADD = 0;
+    UPDATE = 1;
+    DELETE = 2;
+    RENAME = 3;
+    SELECT = 4;
+  }
+}
+
+message PresetUpdateResponse {
+  bool success = 1;
+  FailureReason reason = 2;
+  DeviceBasicInfo curDeviceInfo = 3;
+  
+  enum FailureReason {
+    UNKNOW_FAILURE = 0;  // Note the typo: should be UNKNOWN
+    LINK_DISCONNECTED = 1;
+  }
+}
+
+message ImageParamPresetUpdateRequest {
+  repeated ImageParamPreset imageParamPresetInfos = 1;
+  int32 curImageParam = 2;
+  string curDeviceSerialNum = 3;
+}
+
+message ImageParamPresetUpdateResponse {
+  bool success = 1;
+  FailureReason reason = 2;
+  DeviceBasicInfo curDeviceInfo = 3;
+  
+  enum FailureReason {
+    UNKNOW_FAILURE = 0;  // Note the typo: should be UNKNOWN
+    LINK_DISCONNECTED = 1;
+  }
+}
+
+message ToastNotification {
+  string curDeviceSerialNum = 1;
+  string content = 2;
+}
+
+message Request {
+  bool hasUvcRequest = 1;
+  bool hasUvcExtendRequest = 2;
+  bool hasSwitchDeviceRequest = 3;
+  bool hasControlRequest = 4;
+  bool hasHeartbeatRequest = 5;
+  bool hasPresetUpdateRequest = 6;
+  bool hasValueChangeNotify = 7;
+  
+  UVCRequest uvcRequest = 10;
+  UVCExtendRequest uvcExtendRequest = 11;
+  SwitchDeviceRequest switchDeviceRequest = 12;
+  ControlRequest controlRequest = 13;
+  HeartbeatRequest heartbeatRequest = 14;
+  PresetUpdateRequest presetUpdateRequest = 15;
+  ValueChangeNotification valueChangeNotify = 16;
+}
+
+message Response {
+  bool hasDeviceInfoNotify = 1;
+  bool hasValueChangeNotify = 2;
+  bool hasControlResponse = 3;
+  bool hasConnectionNotify = 4;
+  bool hasHeartbeatResponse = 5;
+  bool hasPresetUpdateResponse = 6;
+  bool hasToastNotify = 7;
+  bool hasImageParamPresetUpdateRequest = 8;
+  
+  DeviceInfoNotification deviceInfoNotify = 10;
+  ValueChangeNotification valueChangeNotify = 11;
+  ControlResponse controlResponse = 12;
+  ConnectionNotification connectionNotify = 13;
+  HeartbeatResponse heartbeatResponse = 14;
+  PresetUpdateResponse presetUpdateResponse = 15;
+  ToastNotification toastNotify = 16;
+  ImageParamPresetUpdateRequest imageParamRequest = 17;
+}
