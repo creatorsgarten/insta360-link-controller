@@ -3,6 +3,7 @@ import { initializeWebSocket } from "../io/insta360.ts";
 import { addLogHandler } from "../state/logging.ts";
 import { FaceDetectionController } from "./FaceDetector.tsx";
 import { GamepadController } from "./GamepadController.tsx";
+import { VersionSelector } from "./VersionSelector.tsx";
 
 export function Controller() {
   const logRef = useRef<HTMLTextAreaElement>(null);
@@ -21,6 +22,7 @@ export function Controller() {
 
   return (
     <div className="p-4">
+      <VersionSelector />
       <h2 className="text-green-400 font-bold">Log messages</h2>
       <textarea
         ref={logRef}
